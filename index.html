@@ -31,24 +31,76 @@
         .then(response => response.json())
         .then(geojson => {
             // GeoJSONソースを追加
-            map.addSource('points', {
+            map.addSource('station', {
                 type: 'geojson',
-                data: geojson
+                data: geojson,
+                cluster: true,  // クラスタ化を有効化
+                clusterRadius: 120, // クラスタの半径
+                clusterMinPoints: 30 // クラスタ化の最小ポイント数
             });
 
-            // ポイントを表示するレイヤー
+            // クラスタ化されていないポイントのレイヤー
             map.addLayer({
-                id: 'points',
+                id: 'station',
                 type: 'circle',
-                source: 'points',
+                source: 'station',
+                filter: ['!', ['has', 'point_count']],
                 paint: {
+                    'circle-color': '#FF0000',
                     'circle-radius': 6,
-                    'circle-color': '#FF0000'
+                }
+            });
+
+            // クラスタ化されたデータの描画 (円部分)
+            map.addLayer({
+                id: 'station_cluster',
+                type: 'circle',
+                source: 'station',
+                filter: ['has', 'point_count'], // クラスタであるかのチェック
+                paint: {
+                    'circle-color': [
+                        'step',
+                        ['get', 'point_count'], // クラスタ内のポイント数に基づく色
+                        '#FF4000', 30,
+                        '#FF8000', 50,
+                        '#FFB000', 100,
+                        '#FFFF00', 300,
+                        '#FFFFFF',
+                    ],
+                    'circle-radius': [
+                        'step',
+                        ['get', 'point_count'], // クラスタ内のポイント数に基づくサイズ
+                        24, 30,
+                        36, 50,
+                        48, 100,
+                        60, 300,
+                        72,
+                    ],
+                }
+            });
+
+            // クラスタ内のポイント数を表示するテキスト
+            map.addLayer({
+                id: 'station_cluster_label',
+                type: 'symbol',
+                source: 'station',
+                filter: ['has', 'point_count'],
+                layout: {
+                    'text-field': '{point_count}',
+                    'text-size': [
+                        'step',
+                        ['get', 'point_count'],
+                        14, 30,
+                        18, 50,
+                        24, 100,
+                        30, 300,
+                        36,
+                    ]
                 }
             });
 
             // ポップアップの設定
-            map.on('click', 'points', (e) => {
+            map.on('click', 'station', (e) => {
                 const coordinates = e.features[0].geometry.coordinates.slice();
                 const properties = e.features[0].properties;
 
@@ -66,11 +118,11 @@
             });
 
             // マウスオーバーでカーソルを変更
-            map.on('mouseenter', 'points', () => {
+            map.on('mouseenter', 'station', () => {
                 map.getCanvas().style.cursor = 'pointer';
             });
 
-            map.on('mouseleave', 'points', () => {
+            map.on('mouseleave', 'station', () => {
                 map.getCanvas().style.cursor = '';
             });
         })
@@ -78,3 +130,4 @@
 </script>
 </body>
 </html>
+
