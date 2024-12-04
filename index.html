@@ -25,43 +25,57 @@
         center: [130.39882, 33.59167], // 中心座標（例: 福岡市）
         zoom: 10
     });
+    // GeoJSONファイルのリスト
+    const geojsonFiles = [
+       { id: 'data', url: './data.geojson' },
+       { id: 'saga', url: './saga.geojson' },
+       { id: 'naga', url: './naga.geojson' },
+       { id: 'kuma', url: './kuma.geojson' },
+       { id: 'oita', url: './oita.geojson' },
+       { id: 'miya', url: './miya.geojson' },
+       { id: 'kago', url: './kago.geojson' },
+    ];
 
+    // 共通の色
+    const commonColor = '#808080'; // 灰色
     // GeoJSONファイルの読み込みと表示
-    fetch('./data.geojson') // 同じフォルダに配置したGeoJSONファイル
+    geojsonFiles.forEach(file => {
+    fetch(file.url)
         .then(response => response.json())
         .then(geojson => {
-            // GeoJSONソースを追加
-            map.addSource('station', {
+            // ソースを追加
+            map.addSource(file.id, {
                 type: 'geojson',
                 data: geojson,
-                cluster: true,  // クラスタ化を有効化
-                clusterRadius: 120, // クラスタの半径
-                clusterMinPoints: 30 // クラスタ化の最小ポイント数
+                cluster: true,
+                clusterRadius: 120,
+                clusterMinPoints: 30
             });
 
             // クラスタ化されていないポイントのレイヤー
             map.addLayer({
-                id: 'station',
+                id: `${file.id}-points`,
                 type: 'circle',
-                source: 'station',
+                source: file.id,
                 filter: ['!', ['has', 'point_count']],
                 paint: {
-                    'circle-color': '#FF0000',
-                    'circle-radius': 6,
+                    'circle-color': '#808080', // 灰色
+                    'circle-radius': 4,
+                    'circle-opacity': 0.5
                 }
             });
 
-            // クラスタ化されたデータの描画 (円部分)
+            // クラスタの円を描画
             map.addLayer({
-                id: 'station_cluster',
+                id: `${file.id}-clusters`,
                 type: 'circle',
-                source: 'station',
-                filter: ['has', 'point_count'], // クラスタであるかのチェック
+                source: file.id,
+                filter: ['has', 'point_count'],
                 paint: {
                     'circle-color': [
                         'step',
-                        ['get', 'point_count'], // クラスタ内のポイント数に基づく色
-                        '#FF4000', 30,
+                        ['get', 'point_count'],
+                        '#808080', 30,
                         '#FF8000', 50,
                         '#FFB000', 100,
                         '#FFFF00', 300,
@@ -69,45 +83,37 @@
                     ],
                     'circle-radius': [
                         'step',
-                        ['get', 'point_count'], // クラスタ内のポイント数に基づくサイズ
+                        ['get', 'point_count'],
                         24, 30,
                         36, 50,
                         48, 100,
                         60, 300,
                         72,
-                    ],
-                }
-            });
-
-            // クラスタ内のポイント数を表示するテキスト
-            map.addLayer({
-                id: 'station_cluster_label',
-                type: 'symbol',
-                source: 'station',
-                filter: ['has', 'point_count'],
-                layout: {
-                    'text-field': '{point_count}',
-                    'text-size': [
-                        'step',
-                        ['get', 'point_count'],
-                        14, 30,
-                        18, 50,
-                        24, 100,
-                        30, 300,
-                        36,
                     ]
                 }
             });
 
-            // ポップアップの設定
-            map.on('click', 'station', (e) => {
+            // クラスタ内のポイント数をテキストで表示
+            map.addLayer({
+                id: `${file.id}-cluster-count`,
+                type: 'symbol',
+                source: file.id,
+                filter: ['has', 'point_count'],
+                layout: {
+                    'text-field': '{point_count}',
+                    'text-size': 12
+                }
+            });
+
+            // ポップアップを設定
+            map.on('click', `${file.id}-points`, (e) => {
                 const coordinates = e.features[0].geometry.coordinates.slice();
                 const properties = e.features[0].properties;
 
+                // "発生日時_掲載" を取得してポップアップの内容に含める
                 const popupContent = `
                     <div>
-                        <strong>${properties.title || 'No Title'}</strong><br>
-                        <p>${properties.description || 'No Description'}</p>
+                        <strong>発生日時: ${properties["発生日時_掲載"] || '不明'}</strong>
                     </div>
                 `;
 
@@ -118,15 +124,16 @@
             });
 
             // マウスオーバーでカーソルを変更
-            map.on('mouseenter', 'station', () => {
+            map.on('mouseenter', `${file.id}-points`, () => {
                 map.getCanvas().style.cursor = 'pointer';
             });
 
-            map.on('mouseleave', 'station', () => {
+            map.on('mouseleave', `${file.id}-points`, () => {
                 map.getCanvas().style.cursor = '';
             });
         })
-        .catch(error => console.error('Error loading GeoJSON:', error));
+        .catch(error => console.error(`Error loading ${file.url}:`, error));
+});
 </script>
 </body>
 </html>
