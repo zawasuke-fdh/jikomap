@@ -1,49 +1,151 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>GeoJSONマップ</title>
-    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
-    <style>
-        body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        .mapboxgl-popup { max-width: 400px; font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif; }
-    </style>
+<meta charset="utf-8">
+<title>福岡改善版</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+<script id="search-js" defer="" src="https://api.mapbox.com/search-js/v1.0.0-beta.22/web.js"></script>
+
+<style>
+body { margin: 0; padding: 0; }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+.mapboxgl-popup { max-width: 400px; font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif; }
+
+/* テーブルスタイル */
+table, th, td {
+  border: 1px solid black;
+}
+th, td {
+  padding: 8px;
+  text-align: left;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 600px) {
+    .mapboxgl-popup table {
+        font-size: 10pt;
+    }
+    th, td {
+        padding: 4px;
+    }
+    .mapboxgl-popup {
+        width: 90%;
+        max-height: 100vh;
+        overflow-y: auto;
+    }
+}
+</style>
 </head>
 <body>
 <div id="map"></div>
 <script>
-    // Mapboxのアクセストークンを設定
-    mapboxgl.accessToken = 'pk.eyJ1Ijoibm5wZGF0YSIsImEiOiJjbHBnbTV6cXIwd2p2MmlwYWxnYWg1bnh3In0.vDZxaboMvN72PFLaztqqnA';
+function isMobileDevice() {
+    return window.innerWidth <= 800;
+}
 
-    // Mapboxのマップを初期化
-    const map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [130.39882, 33.59167], // 中心座標（例: 福岡市）
-        zoom: 10
-    });
-    // GeoJSONファイルのリスト
-    const geojsonFiles = [
-       { id: 'data', url: './data.geojson' },
-       { id: 'saga', url: './saga.geojson' },
-       { id: 'naga', url: './naga.geojson' },
-       { id: 'kuma', url: './kuma.geojson' },
-       { id: 'oita', url: './oita.geojson' },
-       { id: 'miya', url: './miya.geojson' },
-       { id: 'kago', url: './kago.geojson' },
-    ];
+// モバイルデバイスとPCで異なる設定
+const mobileSettings = {
+    center: [130.486, 33.523],
+    zoom: 7.5
+};
 
-    // 共通の色
-    const commonColor = '#808080'; // 灰色
-    // GeoJSONファイルの読み込みと表示
-    geojsonFiles.forEach(file => {
+const desktopSettings = {
+    center: [130.486, 33.523],
+    zoom: 8.75
+};
+
+// デバイスによって設定を選択
+const settings = isMobileDevice() ? mobileSettings : desktopSettings;
+
+// Mapboxのマップを初期化
+mapboxgl.accessToken = 'pk.eyJ1Ijoibm5wZGF0YSIsImEiOiJjbHBnbTV6cXIwd2p2MmlwYWxnYWg1bnh3In0.vDZxaboMvN72PFLaztqqnA';
+const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/nnpdata/cm49p40iv018h01rd0cy76jcu',
+    center: settings.center,
+    zoom: settings.zoom
+});
+
+// スケール表示
+map.addControl(new mapboxgl.ScaleControl({
+    maxWidth: 200,
+    unit: 'metric'
+}), 'bottom-right');
+
+// ナビゲーションコントロール
+map.addControl(new mapboxgl.NavigationControl());
+
+// ポップアップを1つ作成
+const popup = new mapboxgl.Popup();
+
+function onClick(e) {
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const date = e.features[0].properties["発生年月日時"];
+    const dow = e.features[0].properties["発生曜日"];
+    const time = e.features[0].properties["昼夜"];
+    const wea = e.features[0].properties["天候"];
+    const road = e.features[0].properties["道路形状"];
+    const A = e.features[0].properties["年齢（当事者A）"];
+    const B = e.features[0].properties["年齢（当事者B）"];
+    const yA = e.features[0].properties["当事者種別（当事者A）"];
+    const yB = e.features[0].properties["当事者種別（当事者B）"];
+    const zA = e.features[0].properties["人身損傷程度（当事者A）"];
+    const zB = e.features[0].properties["人身損傷程度（当事者B）"];
+
+    const table = "<div class='popup-title'><strong>" + date + '  ' + dow + '曜' + "</strong></div><table><tr><td>昼夜</td><td>" + time + "</td></tr><tr><td>天候</td><td>" + wea + "</td></tr><tr><td>道路形状</td><td>" + road + "</td></tr><tr><td>年齢（当事者A）</td><td>" + A + "</td></tr><tr><td>年齢（当事者B）</td><td>" + B + "</td></tr><tr><td>当事者種別（当事者A）</td><td>" + yA + "</td></tr><tr><td>当事者種別（当事者B）</td><td>" + yB + "</td></tr><tr><td>人身損傷程度（当事者A）</td><td>" + zA + "</td></tr><tr><td>人身損傷程度（当事者B）</td><td>" + zB + "</td></tr></table>";
+
+    popup.setLngLat(coordinates)
+        .setHTML(table)
+        .addTo(map);
+}
+
+function addListeners(layerId) {
+    function updateListeners() {
+        const isLargeScreen = window.innerWidth >= 1024;
+
+        if (isLargeScreen) {
+            map.off('click', layerId, onClick);
+            map.on('mouseenter', layerId, function (e) {
+                map.getCanvas().style.cursor = 'pointer';
+                onClick(e);
+            });
+            map.on('mouseleave', layerId, function () {
+                map.getCanvas().style.cursor = '';
+                popup.remove();
+            });
+        } else {
+            map.off('mouseenter', layerId);
+            map.off('mouseleave', layerId);
+            map.on('click', layerId, onClick);
+        }
+    }
+
+    updateListeners();
+    window.addEventListener('resize', updateListeners);
+}
+
+// Add listeners for each layer
+addListeners('13-18-2024');
+addListeners('6-12-2024');
+addListeners('1-5-2024');
+
+// GeoJSONファイルのリスト
+const geojsonFiles = [
+    { id: 'data', url: './data.geojson' },
+    { id: 'saga', url: './saga.geojson' },
+    { id: 'naga', url: './naga.geojson' },
+    { id: 'kuma', url: './kuma.geojson' },
+    { id: 'oita', url: './oita.geojson' },
+    { id: 'miya', url: './miya.geojson' },
+    { id: 'kago', url: './kago.geojson' },
+];
+
+geojsonFiles.forEach(file => {
     fetch(file.url)
         .then(response => response.json())
         .then(geojson => {
-            // ソースを追加
             map.addSource(file.id, {
                 type: 'geojson',
                 data: geojson,
@@ -52,20 +154,18 @@
                 clusterMinPoints: 30
             });
 
-            // クラスタ化されていないポイントのレイヤー
             map.addLayer({
                 id: `${file.id}-points`,
                 type: 'circle',
                 source: file.id,
                 filter: ['!', ['has', 'point_count']],
                 paint: {
-                    'circle-color': '#808080', // 灰色
+                    'circle-color': '#808080',
                     'circle-radius': 4,
                     'circle-opacity': 0.5
                 }
             });
 
-            // クラスタの円を描画
             map.addLayer({
                 id: `${file.id}-clusters`,
                 type: 'circle',
@@ -93,7 +193,6 @@
                 }
             });
 
-            // クラスタ内のポイント数をテキストで表示
             map.addLayer({
                 id: `${file.id}-cluster-count`,
                 type: 'symbol',
@@ -105,12 +204,10 @@
                 }
             });
 
-            // ポップアップを設定
             map.on('click', `${file.id}-points`, (e) => {
                 const coordinates = e.features[0].geometry.coordinates.slice();
                 const properties = e.features[0].properties;
 
-                // "発生日時_掲載" を取得してポップアップの内容に含める
                 const popupContent = `
                     <div>
                         <strong>発生日時: ${properties["発生日時_掲載"] || '不明'}</strong>
@@ -123,7 +220,6 @@
                     .addTo(map);
             });
 
-            // マウスオーバーでカーソルを変更
             map.on('mouseenter', `${file.id}-points`, () => {
                 map.getCanvas().style.cursor = 'pointer';
             });
@@ -134,7 +230,22 @@
         })
         .catch(error => console.error(`Error loading ${file.url}:`, error));
 });
+
+// 検索ボックス機能の追加
+const searchJS = document.getElementById('search-js');
+searchJS.onload = function () {
+    const searchBox = new MapboxSearchBox();
+    searchBox.accessToken = mapboxgl.accessToken;
+    searchBox.options = {
+        types: 'address,poi',
+        proximity: [130.39882, 33.59167],
+        language: 'ja',
+        country: 'JP'
+    };
+    searchBox.marker = true;
+    searchBox.mapboxgl = mapboxgl;
+    map.addControl(searchBox, 'top-left');
+};
 </script>
 </body>
 </html>
-
