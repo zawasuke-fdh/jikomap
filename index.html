@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <title>福岡改善版</title>
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
-<script id="search-js" defer="" src="https://api.mapbox.com/search-js/v1.0.0-beta.22/web.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
 
 <style>
 body { margin: 0; padding: 0; }
@@ -81,6 +80,9 @@ map.addControl(new mapboxgl.NavigationControl());
 const popup = new mapboxgl.Popup();
 
 function onClick(e) {
+    if (map.getZoom() < 15) {
+        return; // ズームレベルが15未満の場合、ポップアップを表示しない
+    }
     const coordinates = e.features[0].geometry.coordinates.slice();
     const date = e.features[0].properties["発生年月日時"];
     const dow = e.features[0].properties["発生曜日"];
@@ -94,7 +96,7 @@ function onClick(e) {
     const zA = e.features[0].properties["人身損傷程度（当事者A）"];
     const zB = e.features[0].properties["人身損傷程度（当事者B）"];
 
-    const table = "<div class='popup-title'><strong>" + date + '  ' + dow + '曜' + "</strong></div><table><tr><td>昼夜</td><td>" + time + "</td></tr><tr><td>天候</td><td>" + wea + "</td></tr><tr><td>道路形状</td><td>" + road + "</td></tr><tr><td>年齢（当事者A）</td><td>" + A + "</td></tr><tr><td>年齢（当事者B）</td><td>" + B + "</td></tr><tr><td>当事者種別（当事者A）</td><td>" + yA + "</td></tr><tr><td>当事者種別（当事者B）</td><td>" + yB + "</td></tr><tr><td>人身損傷程度（当事者A）</td><td>" + zA + "</td></tr><tr><td>人身損傷程度（当事者B）</td><td>" + zB + "</td></tr></table>";
+    const table = "<div class='popup-title'><strong>" + date + '  ' + dow + '曜' + "</strong></div><table><tr><td>昼夜</td><td>" + time + "</td></tr><tr><td>天候</td><td>" + wea + "</td></tr><tr><td>道路形状</td><td>" + road + "</td></tr><tr><td>年齢（当事者A）</td><td>" + A + "</td></tr><tr><td>年齢（当事者B）</td><td>" + B + "</td></tr><tr><td>当事者種別（当事者A）</td><td>" + yA + "</td></tr><tr><td>当事者種別（当事者B）</td><td>" + yB + "</td></tr><tr><td>人身損傷程度（当事者A）</td><td>" + zA + "</td></tr><tr><td>人身損傷程度（当事者B）</td><td>" + zB + "</td></tr></table>';
 
     popup.setLngLat(coordinates)
         .setHTML(table)
@@ -108,8 +110,10 @@ function addListeners(layerId) {
         if (isLargeScreen) {
             map.off('click', layerId, onClick);
             map.on('mouseenter', layerId, function (e) {
-                map.getCanvas().style.cursor = 'pointer';
-                onClick(e);
+                if (map.getZoom() >= 15) {
+                    map.getCanvas().style.cursor = 'pointer';
+                    onClick(e);
+                }
             });
             map.on('mouseleave', layerId, function () {
                 map.getCanvas().style.cursor = '';
@@ -205,6 +209,9 @@ geojsonFiles.forEach(file => {
             });
 
             map.on('click', `${file.id}-points`, (e) => {
+                if (map.getZoom() < 15) {
+                    return; // ズームレベルが15未満の場合、ポップアップを表示しない
+                }
                 const coordinates = e.features[0].geometry.coordinates.slice();
                 const properties = e.features[0].properties;
 
@@ -221,7 +228,9 @@ geojsonFiles.forEach(file => {
             });
 
             map.on('mouseenter', `${file.id}-points`, () => {
-                map.getCanvas().style.cursor = 'pointer';
+                if (map.getZoom() >= 15) {
+                    map.getCanvas().style.cursor = 'pointer';
+                }
             });
 
             map.on('mouseleave', `${file.id}-points`, () => {
