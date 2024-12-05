@@ -9,61 +9,17 @@
 <script id="search-js" defer="" src="https://api.mapbox.com/search-js/v1.0.0-beta.22/web.js"></script>
 
 <style>
-body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-header {
-    height: 10%;
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+body { margin: 0; padding: 0; }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+.mapboxgl-popup { max-width: 400px; font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif; }
 
-header img {
-    width: 100px;
-    height: auto;
+/* テーブルスタイル */
+table, th, td {
+  border: 1px solid black;
 }
-
-#map { flex: 1; width: 100%; }
-
-/* サイドメニュー */
-#side-menu {
-    position: fixed;
-    top: 0;
-    right: -60%;
-    width: 60%;
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.95);
-    z-index: 20;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
-    transition: right 0.3s ease;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-#menu-button {
-    background-color: #333;
-    color: white;
-    padding: 10px;
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-}
-
-.open {
-    right: 0;
-}
-
-/* ポップアップの罫線スタイル */
-.mapboxgl-popup-content table, .mapboxgl-popup-content th, .mapboxgl-popup-content td {
-    border: 2px solid black;
-    border-collapse: collapse;
-}
-.mapboxgl-popup-content th, .mapboxgl-popup-content td {
-    padding: 8px;
-    text-align: left;
+th, td {
+  padding: 8px;
+  text-align: left;
 }
 
 /* レスポンシブデザイン */
@@ -83,16 +39,7 @@ header img {
 </style>
 </head>
 <body>
-<header>
-    <div><img src="logo.jpg" alt="Logo"></div>
-    <h2>福岡・佐賀・長崎3県 子どもの交通事故マップ</h2>
-    <button id="menu-button" onclick="toggleSideMenu()">☰</button>
-</header>
 <div id="map"></div>
-<div id="side-menu">
-    <h2>メニュー</h2>
-    <p>ああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ</p>
-</div>
 <script>
 function isMobileDevice() {
     return window.innerWidth <= 800;
@@ -121,106 +68,184 @@ const map = new mapboxgl.Map({
     zoom: settings.zoom
 });
 
-// スタイルが読み込まれた後にソースとレイヤーを追加する
-map.on('style.load', () => {
-    geojsonFiles.forEach(file => {
-        fetch(file.url)
-            .then(response => response.json())
-            .then(geojson => {
-                map.addSource(file.id, {
-                    type: 'geojson',
-                    data: geojson,
-                    cluster: true,
-                    clusterRadius: 120,
-                    clusterMinPoints: 30
-                });
+// スケール表示
+map.addControl(new mapboxgl.ScaleControl({
+    maxWidth: 200,
+    unit: 'metric'
+}), 'bottom-right');
 
-                map.addLayer({
-                    id: `${file.id}-points`,
-                    type: 'circle',
-                    source: file.id,
-                    filter: ['!', ['has', 'point_count']],
-                    paint: {
-                        'circle-color': '#808080',
-                        'circle-radius': 6,
-                        'circle-opacity': 0.5
-                    }
-                });
+// ナビゲーションコントロール
+map.addControl(new mapboxgl.NavigationControl());
 
-                map.addLayer({
-                    id: `${file.id}-clusters`,
-                    type: 'circle',
-                    source: file.id,
-                    filter: ['has', 'point_count'],
-                    paint: {
-                        'circle-color': [
-                            'step',
-                            ['get', 'point_count'],
-                            '#808080', 30,
-                            '#FF8000', 50,
-                            '#FFB000', 100,
-                            '#FFFF00', 300,
-                            '#dcdcdc',
-                        ],
-                        'circle-radius': [
-                            'step',
-                            ['get', 'point_count'],
-                            24, 30,
-                            36, 50,
-                            48, 100,
-                            60, 300,
-                            72,
-                        ]
-                    }
-                });
+// ポップアップを1つ作成
+const popup = new mapboxgl.Popup();
 
-                map.addLayer({
-                    id: `${file.id}-cluster-count`,
-                    type: 'symbol',
-                    source: file.id,
-                    filter: ['has', 'point_count'],
-                    layout: {
-                        'text-field': '{point_count}',
-                        'text-size': 12
-                    }
-                });
+function onClick(e) {
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const date = e.features[0].properties["発生年月日時"];
+    const dow = e.features[0].properties["発生曜日"];
+    const time = e.features[0].properties["昼夜"];
+    const wea = e.features[0].properties["天候"];
+    const road = e.features[0].properties["道路形状"];
+    const A = e.features[0].properties["年齢（当事者A）"];
+    const B = e.features[0].properties["年齢（当事者B）"];
+    const yA = e.features[0].properties["当事者種別（当事者A）"];
+    const yB = e.features[0].properties["当事者種別（当事者B）"];
+    const zA = e.features[0].properties["人身損傷程度（当事者A）"];
+    const zB = e.features[0].properties["人身損傷程度（当事者B）"];
 
-                map.on('click', `${file.id}-points`, (e) => {
-                    const coordinates = e.features[0].geometry.coordinates.slice();
-                    const properties = e.features[0].properties;
+    const table = "<div class='popup-title'><strong>" + date + '  ' + dow + '曜' + "</strong></div><table><tr><td>昼夜</td><td>" + time + "</td></tr><tr><td>天候</td><td>" + wea + "</td></tr><tr><td>道路形状</td><td>" + road + "</td></tr><tr><td>年齢（当事者A）</td><td>" + A + "</td></tr><tr><td>年齢（当事者B）</td><td>" + B + "</td></tr><tr><td>当事者種別（当事者A）</td><td>" + yA + "</td></tr><tr><td>当事者種別（当事者B）</td><td>" + yB + "</td></tr><tr><td>人身損傷程度（当事者A）</td><td>" + zA + "</td></tr><tr><td>人身損傷程度（当事者B）</td><td>" + zB + "</td></tr></table>";
 
-                    const popupContent = `
-                        <div>
-                            <table>
-                                <tr><th>発生日時</th><td>${properties["発生日時_掲載"] || '不明'}</td></tr>
-                            </table>
-                        </div>
-                    `;
+    popup.setLngLat(coordinates)
+        .setHTML(table)
+        .addTo(map);
+}
 
-                    new mapboxgl.Popup()
-                        .setLngLat(coordinates)
-                        .setHTML(popupContent)
-                        .addTo(map);
-                });
+function addListeners(layerId) {
+    function updateListeners() {
+        const isLargeScreen = window.innerWidth >= 1024;
 
-                map.on('mouseenter', `${file.id}-points`, () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
+        if (isLargeScreen) {
+            map.off('click', layerId, onClick);
+            map.on('mouseenter', layerId, function (e) {
+                map.getCanvas().style.cursor = 'pointer';
+                onClick(e);
+            });
+            map.on('mouseleave', layerId, function () {
+                map.getCanvas().style.cursor = '';
+                popup.remove();
+            });
+        } else {
+            map.off('mouseenter', layerId);
+            map.off('mouseleave', layerId);
+            map.on('click', layerId, onClick);
+        }
+    }
 
-                map.on('mouseleave', `${file.id}-points`, () => {
-                    map.getCanvas().style.cursor = '';
-                });
-            })
-            .catch(error => console.error(`Error loading ${file.url}:`, error));
-    });
+    updateListeners();
+    window.addEventListener('resize', updateListeners);
+}
+
+// Add listeners for each layer
+addListeners('13-18-2024');
+addListeners('6-12-2024');
+addListeners('1-5-2024');
+
+// GeoJSONファイルのリスト
+const geojsonFiles = [
+    { id: 'data', url: './data.geojson' },
+    { id: 'saga', url: './saga.geojson' },
+    { id: 'naga', url: './naga.geojson' },
+    { id: 'kuma', url: './kuma.geojson' },
+    { id: 'oita', url: './oita.geojson' },
+    { id: 'miya', url: './miya.geojson' },
+    { id: 'kago', url: './kago.geojson' },
+];
+
+geojsonFiles.forEach(file => {
+    fetch(file.url)
+        .then(response => response.json())
+        .then(geojson => {
+            map.addSource(file.id, {
+                type: 'geojson',
+                data: geojson,
+                cluster: true,
+                clusterRadius: 120,
+                clusterMinPoints: 30
+            });
+
+            map.addLayer({
+                id: `${file.id}-points`,
+                type: 'circle',
+                source: file.id,
+                filter: ['!', ['has', 'point_count']],
+                paint: {
+                    'circle-color': '#808080',
+                    'circle-radius': 6,
+                    'circle-opacity': 0.5
+                }
+            });
+
+            map.addLayer({
+                id: `${file.id}-clusters`,
+                type: 'circle',
+                source: file.id,
+                filter: ['has', 'point_count'],
+                paint: {
+                    'circle-color': [
+                        'step',
+                        ['get', 'point_count'],
+                        '#808080', 30,
+                        '#FF8000', 50,
+                        '#FFB000', 100,
+                        '#FFFF00', 300,
+                        '#dcdcdc',
+                    ],
+                    'circle-radius': [
+                        'step',
+                        ['get', 'point_count'],
+                        24, 30,
+                        36, 50,
+                        48, 100,
+                        60, 300,
+                        72,
+                    ]
+                }
+            });
+
+            map.addLayer({
+                id: `${file.id}-cluster-count`,
+                type: 'symbol',
+                source: file.id,
+                filter: ['has', 'point_count'],
+                layout: {
+                    'text-field': '{point_count}',
+                    'text-size': 12
+                }
+            });
+
+            map.on('click', `${file.id}-points`, (e) => {
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const properties = e.features[0].properties;
+
+                const popupContent = `
+                    <div>
+                        <strong>発生日時: ${properties["発生日時_掲載"] || '不明'}</strong>
+                    </div>
+                `;
+
+                new mapboxgl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(popupContent)
+                    .addTo(map);
+            });
+
+            map.on('mouseenter', `${file.id}-points`, () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', `${file.id}-points`, () => {
+                map.getCanvas().style.cursor = '';
+            });
+        })
+        .catch(error => console.error(`Error loading ${file.url}:`, error));
 });
 
-// サイドメニューのトグル関数
-function toggleSideMenu() {
-    const sideMenu = document.getElementById('side-menu');
-    const isOpen = sideMenu.style.right === '0px';
-    sideMenu.style.right = isOpen ? '-60%' : '0';
-}
+// 検索ボックス機能の追加
+const searchJS = document.getElementById('search-js');
+searchJS.onload = function () {
+    const searchBox = new MapboxSearchBox();
+    searchBox.accessToken = mapboxgl.accessToken;
+    searchBox.options = {
+        types: 'address,poi',
+        proximity: [130.39882, 33.59167],
+        language: 'ja',
+        country: 'JP'
+    };
+    searchBox.marker = true;
+    searchBox.mapboxgl = mapboxgl;
+    map.addControl(searchBox, 'top-left');
+};
 </script>
 </body>
 </html>
