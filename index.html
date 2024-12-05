@@ -9,24 +9,24 @@
 <script id="search-js" defer="" src="https://api.mapbox.com/search-js/v1.0.0-beta.22/web.js"></script>
 
 <style>
-body { margin: 0; padding: 0; }
-#map { position: absolute; top: 0; bottom: 0; width: 100%; }
-.mapboxgl-popup { max-width: 400px; font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif; }
-
+body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
 header {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 10;
+    height: 10%;
     background-color: rgba(255, 255, 255, 0.8);
     padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 header img {
     width: 100px;
     height: auto;
 }
+
+#map { flex: 1; width: 100%; }
 
 /* ハンバーガーメニュー */
 .hamburger-menu {
@@ -59,9 +59,6 @@ header img {
     /* ハンバーガーメニュー */
     .hamburger-menu {
         display: block;
-        position: absolute;
-        top: 20px;
-        right: 20px;
         z-index: 15;
     }
 
