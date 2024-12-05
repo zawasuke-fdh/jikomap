@@ -13,13 +13,33 @@ body { margin: 0; padding: 0; }
 #map { position: absolute; top: 0; bottom: 0; width: 100%; }
 .mapboxgl-popup { max-width: 400px; font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif; }
 
-/* テーブルスタイル */
-table, th, td {
-  border: 1px solid black;
+header {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 5px;
 }
-th, td {
-  padding: 8px;
-  text-align: left;
+
+header img {
+    width: 100px;
+    height: auto;
+}
+
+/* ハンバーガーメニュー */
+.hamburger-menu {
+    display: none;
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#menu-content {
+    display: none;
 }
 
 /* レスポンシブデザイン */
@@ -35,11 +55,43 @@ th, td {
         max-height: 100vh;
         overflow-y: auto;
     }
+
+    /* ハンバーガーメニュー */
+    .hamburger-menu {
+        display: block;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 15;
+    }
+
+    #menu-content {
+        display: none;
+        padding: 10px;
+        background-color: #f1f1f1;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+
+    #menu-content p {
+        margin: 0;
+        padding: 10px 0;
+    }
 }
+
 </style>
 </head>
 <body>
+<header>
+    <div><img src="logo.jpg" alt="Logo"></div>
+    <h2>あああああああああああああああああああああ</h2>
+    <div class="hamburger-menu" onclick="toggleMenu()">☰ メニュー</div>
+    <div id="menu-content">
+        <p>ああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ</p>
+    </div>
+</header>
 <div id="map"></div>
+
 <script>
 function isMobileDevice() {
     return window.innerWidth <= 800;
@@ -246,6 +298,16 @@ searchJS.onload = function () {
     searchBox.mapboxgl = mapboxgl;
     map.addControl(searchBox, 'top-left');
 };
+
+// ハンバーガーメニューのトグル関数
+function toggleMenu() {
+    const menuContent = document.getElementById('menu-content');
+    if (menuContent.style.display === 'none' || menuContent.style.display === '') {
+        menuContent.style.display = 'block';
+    } else {
+        menuContent.style.display = 'none';
+    }
+}
 </script>
 </body>
 </html>
