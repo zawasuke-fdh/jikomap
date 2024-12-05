@@ -9,7 +9,7 @@
 <script id="search-js" defer="" src="https://api.mapbox.com/search-js/v1.0.0-beta.22/web.js"></script>
 
 <style>
-body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 header {
     height: 10%;
     background-color: rgba(255, 255, 255, 0.8);
@@ -28,18 +28,32 @@ header img {
 
 #map { flex: 1; width: 100%; }
 
-/* ハンバーガーメニュー */
-.hamburger-menu {
-    display: none;
+/* サイドメニュー */
+#side-menu {
+    position: fixed;
+    top: 0;
+    right: -60%;
+    width: 60%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.95);
+    z-index: 20;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    transition: right 0.3s ease;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+#menu-button {
     background-color: #333;
     color: white;
     padding: 10px;
     font-size: 16px;
     cursor: pointer;
+    border: none;
 }
 
-#menu-content {
-    display: none;
+.open {
+    right: 0;
 }
 
 /* レスポンシブデザイン */
@@ -55,39 +69,20 @@ header img {
         max-height: 100vh;
         overflow-y: auto;
     }
-
-    /* ハンバーガーメニュー */
-    .hamburger-menu {
-        display: block;
-        z-index: 15;
-    }
-
-    #menu-content {
-        display: none;
-        padding: 10px;
-        background-color: #f1f1f1;
-        border-radius: 5px;
-        margin-top: 10px;
-    }
-
-    #menu-content p {
-        margin: 0;
-        padding: 10px 0;
-    }
 }
-
 </style>
 </head>
 <body>
 <header>
     <div><img src="logo.jpg" alt="Logo"></div>
-    <h2>あああああああああああああああああああああ</h2>
-    <div class="hamburger-menu" onclick="toggleMenu()">☰ メニュー</div>
-    <div id="menu-content">
-        <p>あああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ</p>
-    </div>
+    <h2>福岡・佐賀・長崎3県 子どもの交通事故マップ</h2>
+  　<button id="menu-button" onclick="toggleSideMenu()">☰</button>
 </header>
 <div id="map"></div>
+<div id="side-menu">
+    <h2>メニュー</h2>
+    <p>あああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ</p>
+</div>
 <script>
 function isMobileDevice() {
     return window.innerWidth <= 800;
@@ -295,13 +290,13 @@ searchJS.onload = function () {
     map.addControl(searchBox, 'top-left');
 };
 
-// ハンバーガーメニューのトグル関数
-function toggleMenu() {
-    const menuContent = document.getElementById('menu-content');
-    if (menuContent.style.display === 'none' || menuContent.style.display === '') {
-        menuContent.style.display = 'block';
+// サイドメニューのトグル関数
+function toggleSideMenu() {
+    const sideMenu = document.getElementById('side-menu');
+    if (sideMenu.classList.contains('open')) {
+        sideMenu.classList.remove('open');
     } else {
-        menuContent.style.display = 'none';
+        sideMenu.classList.add('open');
     }
 }
 </script>
