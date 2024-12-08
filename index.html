@@ -257,6 +257,27 @@
             zoom: settings.zoom
         });
 
+        // 検索ボックス機能の追加
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof MapboxSearchBox !== 'undefined') {
+                const searchBox = new MapboxSearchBox({
+                    accessToken: mapboxgl.accessToken,
+                    options: {
+                        types: ['address', 'poi'], // 検索タイプを配列形式で指定
+                        proximity: [130.39882, 33.59167], // 福岡の中心座標
+                        language: 'ja', // 日本語設定
+                        country: ['JP'] // 国コードを配列形式で指定
+                    },
+                    mapboxgl: mapboxgl // Mapbox GL JSを渡す
+                });
+
+                // マップに検索ボックスを追加
+                map.addControl(searchBox, 'top-left');
+            } else {
+                console.error('MapboxSearchBox is not available.');
+            }
+        });
+        
         // スケール表示
         map.addControl(new mapboxgl.ScaleControl({
             maxWidth: 200,
@@ -420,26 +441,7 @@
                 .catch(error => console.error(`Error loading ${file.url}:`, error));
         });
 
-        // 検索ボックス機能の追加
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof MapboxSearchBox !== 'undefined') {
-                const searchBox = new MapboxSearchBox({
-                    accessToken: mapboxgl.accessToken,
-                    options: {
-                        types: ['address', 'poi'], // 検索タイプを配列形式で指定
-                        proximity: [130.39882, 33.59167], // 福岡の中心座標
-                        language: 'ja', // 日本語設定
-                        country: ['JP'] // 国コードを配列形式で指定
-                    },
-                    mapboxgl: mapboxgl // Mapbox GL JSを渡す
-                });
-
-                // マップに検索ボックスを追加
-                map.addControl(searchBox, 'top-left');
-            } else {
-                console.error('MapboxSearchBox is not available.');
-            }
-        });
+        
 
 
 
