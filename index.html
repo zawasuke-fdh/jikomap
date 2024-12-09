@@ -13,8 +13,8 @@
             margin: 0;
             font-family: "Noto Sans JP", Arial, sans-serif;
             height: 100vh;
-            height: 100dvh;
-            overflow-y: auto;
+            height: 100svh;
+            overflow: hidden;
         }
 
         table, th, td {
@@ -55,21 +55,24 @@
         }
 
         .menu-button {
-            background-color: #333;
-            color: #fff;
-            border: none;
+            background-color: #fff;
+            color: #f00;
+            border: 2px solid #f00;
             padding: 10px 15px;
             cursor: pointer;
             font-size: 1.5rem;
+            font-weight: bold;
             position: absolute;
             right: 20px;
             top: 50%;
             transform: translateY(-50%);
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
         }
-
+        .menu-button:hover {
+            background-color: #fdd;
+        }
         .menu-label {
             font-size: 0.8rem;
             margin-top: 5px;
@@ -97,12 +100,13 @@
         }
 
         .close-button {
-            background-color: #333;
-            color: #fff;
-            border: none;
+            background-color: #fff;
+            color: #f00;
+            border: 2px solid #f00;
             padding: 10px 15px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.2rem;
+            font-weight: bold;
             position: absolute;
             top: 20px;
             right: 20px;
@@ -186,15 +190,14 @@
                 <h2>福岡・佐賀・長崎3県<span class="sp-only"><br></span> 子どもの交通事故マップ</h2>
             </div>
             <button class="menu-button" onclick="toggleMenu()">
-                ☰
-                <span class="menu-label">使い方</span>
+                使い方
             </button>
         </div>
 
         <div class="map" id="map"></div>
 
         <div class="info" id="infoSection">
-            <button class="close-button" onclick="toggleMenu()">✖</button>
+            <button class="close-button" onclick="toggleMenu()">閉じる</button>
             <div class="info-content">
                 <p style="font-size: 1.2em;">福岡、佐賀、長崎県内で2018～23年に起きた交通事故データのうち、歩行中か自転車に乗っていた1～18歳の子どもが死傷した事故の発生地点を確認できます。</p>
                 <p style="font-size: 1.2em;">丸印をタップすると、事故の概要が表示されます。</p>
@@ -282,7 +285,7 @@
                             filter: ['!', ['has', 'point_count']],
                             paint: {
                                 'circle-color': '#90ee90',
-                                'circle-radius': 6,
+                                'circle-radius': 8,
                                 'circle-opacity': 0.5
                             }
                         });
@@ -321,7 +324,7 @@
                             filter: ['has', 'point_count'],
                             layout: {
                                 'text-field': '{point_count}',
-                                'text-size': 12
+                                'text-size': 15
                             }
                         });
 
