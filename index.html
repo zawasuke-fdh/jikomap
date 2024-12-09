@@ -26,6 +26,7 @@
         }
 
         .header {
+            flex-shrink: 0;
             height: 15%;
             display: flex;
             justify-content: center;
@@ -116,14 +117,17 @@
         }
 
         .map {
-            height: 85%;
+            flex-grow: 1; /* マップ部分を画面いっぱいに広げる */
+            min-height: 0; /* 必要に応じて調整 */
             width: 100%;
+            height: calc(100% - 15%); /* ヘッダー部分を除いた高さ */
         }
 
         .container {
             height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden; /* スクロールの不要部分を隠す */
         }
 
         @media screen and (max-width: 768px) {
@@ -191,12 +195,12 @@
         <div class="info" id="infoSection">
             <button class="close-button" onclick="toggleMenu()">✖</button>
             <div class="info-content">
-                <p style="font-size: 1.5em;">福岡、佐賀、長崎県内で2018～23年に起きた交通事故データのうち、歩行中か自転車に乗っていた1～18歳の子どもが死傷した事故の発生地点を確認できます。</p>
-                <p style="font-size: 1.5em;">丸印をタップすると、事故の概要が表示されます。</p>
-                <p style="font-size: 1.5em;">◆<span style="color:#f15a24;">赤い丸</span>が1～5歳、<span style="color:#29abe2;">青い丸</span>が6～12歳、<span style="color: #fcd621;">黄色の丸</span>が13～18歳です。<br>
+                <p style="font-size: 1.2em;">福岡、佐賀、長崎県内で2018～23年に起きた交通事故データのうち、歩行中か自転車に乗っていた1～18歳の子どもが死傷した事故の発生地点を確認できます。</p>
+                <p style="font-size: 1.2em;">丸印をタップすると、事故の概要が表示されます。</p>
+                <p style="font-size: 1.2em;">「サーチ」のボタンに施設名や店舗名を入力すると、そのエリアに飛ぶことができます。</p>
+                <p style="font-size: 1.2em;">◆<span style="color:#f15a24;">赤い丸</span>が1～5歳、<span style="color:#29abe2;">青い丸</span>が6～12歳、<span style="color: #fcd621;">黄色の丸</span>が13～18歳が当事者の事故です。<br>
                     ◆<span style="color: #90ee90;">緑色の丸</span>は2019～23年の成人も含む全年齢の交通事故の発生地点です。こちらは九州7県のデータを掲載しています。<br>
                     　大きな円に表示された数字は、全年齢の交通事故の発生件数を表示したものです。</p>                
-                <p style="font-size: 1.5em;">「サーチ」のボタンに地名や店舗名を入力すると、そのエリアに飛ぶことができます。</p>
                 <p>【赤青黄色の丸印の出典：福岡、佐賀、長崎3県警が西日本新聞に提供したデータ】<br>
                    【緑色の丸印の出典：警察庁のオープンデータ】</p>
                 <p>※地図の表示と実際の道路の形状が異なる場合があります。</p>
