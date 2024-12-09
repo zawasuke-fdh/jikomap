@@ -12,6 +12,7 @@
         body {
             margin: 0;
             font-family: "Noto Sans JP", Arial, sans-serif;
+            height: 100vh;
             height: 100svh;
             overflow: hidden;
         }
@@ -149,7 +150,7 @@
 
             .logo img {
                 max-height: 25px;
-                margin-top: 10px;
+                margin-top: 15px;
                 margin-bottom: 5px;
             }
 
@@ -249,7 +250,7 @@
             map.addControl(new mapboxgl.ScaleControl({
                 maxWidth: 200,
                 unit: 'metric'
-            }), 'bottom-right');
+            }), 'top-left');
 
             // ナビゲーションコントロール
             map.addControl(new mapboxgl.NavigationControl());
