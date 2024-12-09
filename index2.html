@@ -7,6 +7,7 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
     <script id="search-js" defer="" src="https://api.mapbox.com/search-js/v1.0.0-beta.22/web.js"></script>
+    
     <title>交通事故マップ</title>
     <style>
         body {
@@ -236,41 +237,38 @@
             return window.innerWidth <= 800;
         }
 
-        // モバイルデバイスとPCで異なる設定
-        const mobileSettings = {
-            center: [130.486, 33.523],
-            zoom: 7.5
-        };
+            // モバイルデバイスとPCで異なる設定
+            const mobileSettings = {
+                center: [130.486, 33.523],
+                zoom: 7.5
+            };
 
-        const desktopSettings = {
-            center: [130.486, 33.523],
-            zoom: 8.75
-        };
-        // デバイスによって設定を選択
-        const settings = isMobileDevice() ? mobileSettings : desktopSettings;
-
-        // Mapboxのマップを初期化
-        mapboxgl.accessToken = 'pk.eyJ1Ijoibm5wZGF0YSIsImEiOiJjbHBnbTV6cXIwd2p2MmlwYWxnYWg1bnh3In0.vDZxaboMvN72PFLaztqqnA';
-        const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/nnpdata/cm49p40iv018h01rd0cy76jcu',
-            center: settings.center,
-            zoom: settings.zoom
-        });
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchBox = new MapboxSearchBox({
-                accessToken: mapboxgl.accessToken,
-                mapboxgl: mapboxgl,
-                options: {
-                    types: 'address,poi',
-                    proximity: [130.39882, 33.59167],
-                    language: 'ja',
-                    country: 'JP'
-                },
-                marker: true
+            const desktopSettings = {
+                center: [130.486, 33.523],
+                zoom: 8.75
+            };
+            // デバイスによって設定を選択
+            const settings = isMobileDevice() ? mobileSettings : desktopSettings;
+            // Mapboxのマップを初期化
+            const accessToken = 'pk.eyJ1Ijoibm5wZGF0YSIsImEiOiJjbTRnZmpubWUxZDlnMmxwZmIwZWI5eHBnIn0.4SKIhYxS-_LL6MD9BKL_Rg';
+            const map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/nnpdata/cm49p40iv018h01rd0cy76jcu',
+                center: settings.center,
+                zoom: settings.zoom
             });
+            
+            const searchBox = new MapboxSearchBox();
+            searchBox.accessToken = accessToken,
+            searchBox.options = {
+              types: 'address,poi',
+              proximity: [130.39882, 33.59167],
+              language: 'ja',
+              country: 'JP'
+            },
+            searchBox.mapboxgl = mapboxgl;
             map.addControl(searchBox, 'top-left');
-        });
+            
 
         map.on('style.load', () => {
             console.log('Style loaded. Initializing layers and controls.');

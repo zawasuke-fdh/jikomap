@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/search-js/v1.0.0-beta.22/web.js"></script>
+    <title>交通事故マップ - 検索優先</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Noto Sans JP", Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            height: 15%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-sizing: border-box;
+            background: #f5f5f5;
+        }
+
+        .map {
+            height: 85%;
+            width: 100%;
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #searchBoxContainer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            max-width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="searchBoxContainer">
+            <input id="searchInput" type="text" placeholder="検索場所を入力" style="width: 100%; padding: 8px;">
+        </div>
+        <div class="map" id="map"></div>
+    </div>
+
+    <script>
+        // Mapboxのアクセストークンを設定
+        const accessToken = 'pk.eyJ1Ijoibm5wZGF0YSIsImEiOiJjbHBnbTV6cXIwd2p2MmlwYWxnYWg1bnh3In0.vDZxaboMvN72PFLaztqqnA';
+        mapboxgl.accessToken = accessToken;
+
+        // マップを初期化
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/nnpdata/cm49p40iv018h01rd0cy76jcu',
+            center: [130.486, 33.523],
+            zoom: 7.5
+        });
+
+        // 検索ボックスを設定
+        const searchInput = document.getElementById('searchInput');
+
+        // 検索機能
+        searchInput.addEventListener('input', async (event) => {
+            const query = event.target.value;
+            if (query.length < 3) return; // 3文字以上で検索開始
+
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?` +
+                        `access_token=${accessToken}&limit=5&language=ja`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                displaySearchResults(data.features);
+            } catch (error) {
+                console.error('Error fetching search results:', error);
+            }
+        });
+
+        // 検索結果を地図に表示
+        function displaySearchResults(features) {
+            features.forEach((feature) => {
+                const coordinates = feature.geometry.coordinates;
+                const placeName = feature.place_name;
+
+                // ピンを追加
+                new mapboxgl.Marker()
+                    .setLngLat(coordinates)
+                    .setPopup(new mapboxgl.Popup().setHTML(`<strong>${placeName}</strong>`))
+                    .addTo(map);
+
+                // 最初の結果にズームイン
+                if (features.indexOf(feature) === 0) {
+                    map.flyTo({ center: coordinates, zoom: 14 });
+                }
+            });
+        }
+
+        // 初期ロード後、元の地図初期化コードを忠実に実行
+        map.on('load', () => {
+            console.log('Map loaded, initializing additional layers.');
+
+            // ここに元の地図関連コードを追加
+            const geojsonFiles = [
+                { id: 'data', url: './data.geojson' },
+                { id: 'saga', url: './saga.geojson' },
+                { id: 'naga', url: './naga.geojson' },
+                { id: 'kuma', url: './kuma.geojson' },
+                { id: 'oita', url: './oita.geojson' },
+                { id: 'miya', url: './miya.geojson' },
+                { id: 'kago', url: './kago.geojson' },
+            ];
+
+            geojsonFiles.forEach(file => {
+                fetch(file.url)
+                    .then(response => response.json())
+                    .then(geojson => {
+                        map.addSource(file.id, {
+                            type: 'geojson',
+                            data: geojson,
+                            cluster: true,
+                            clusterRadius: 120,
+                            clusterMinPoints: 30
+                        });
+
+                        map.addLayer({
+                            id: `${file.id}-points`,
+                            type: 'circle',
+                            source: file.id,
+                            filter: ['!', ['has', 'point_count']],
+                            paint: {
+                                'circle-color': '#808080',
+                                'circle-radius': 6,
+                                'circle-opacity': 0.5
+                            }
+                        });
+
+                        map.addLayer({
+                            id: `${file.id}-clusters`,
+                            type: 'circle',
+                            source: file.id,
+                            filter: ['has', 'point_count'],
+                            paint: {
+                                'circle-color': [
+                                    'step',
+                                    ['get', 'point_count'],
+                                    '#808080', 30,
+                                    '#FF8000', 50,
+                                    '#FFB000', 100,
+                                    '#FFFF00', 300,
+                                    '#dcdcdc',
+                                ],
+                                'circle-radius': [
+                                    'step',
+                                    ['get', 'point_count'],
+                                    24, 30,
+                                    36, 50,
+                                    48, 100,
+                                    60, 300,
+                                    72,
+                                ]
+                            }
+                        });
+
+                        map.addLayer({
+                            id: `${file.id}-cluster-count`,
+                            type: 'symbol',
+                            source: file.id,
+                            filter: ['has', 'point_count'],
+                            layout: {
+                                'text-field': '{point_count}',
+                                'text-size': 12
+                            }
+                        });
+                    })
+                    .catch(error => console.error(`Error loading ${file.url}:`, error));
+            });
+        });
+    </script>
+</body>
+
+</html>
