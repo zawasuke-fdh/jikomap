@@ -417,6 +417,24 @@
             searchBox.mapboxgl = mapboxgl;
             map.addControl(searchBox, 'top-left');
         };
+        function adjustMapHeight() {
+            const header = document.querySelector('.header');
+            const map = document.querySelector('.map');
+            
+            // ヘッダーの高さを取得し、マップに適用
+            const headerHeight = header.offsetHeight;
+            const viewportHeight = window.innerHeight;
+
+            // マップの高さを動的に計算
+            map.style.height = `${viewportHeight - headerHeight}px`;
+        }
+
+        // 初期ロード時に高さを調整
+        adjustMapHeight();
+
+        // ウィンドウリサイズ時にも高さを再調整
+        window.addEventListener('resize', adjustMapHeight);
+
     </script>
 </body>
 
