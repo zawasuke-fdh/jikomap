@@ -298,15 +298,8 @@
                             source: file.id,
                             filter: ['has', 'point_count'],
                             paint: {
-                                'circle-color': [
-                                    'step',
-                                    ['get', 'point_count'],
-                                    '#eef0fa', 100,
-                                    '#e1e4f0', 1000,
-                                    '#d2d7e6', 5000,
-                                    '#babecc', 10000,
-                                    '#a2a6b3',
-                                ],
+                                'circle-color': '#041533', // 色を指定
+                                'circle-opacity': 0.4, // 透過度を40%に設定
                                 'circle-radius': [
                                     'step',
                                     ['get', 'point_count'],
@@ -327,6 +320,9 @@
                             layout: {
                                 'text-field': '{point_count}',
                                 'text-size': 15
+                            },
+                            paint: {
+                                'text-color': '#FFFFFF' // 数値を白に設定
                             }
                         });
 
