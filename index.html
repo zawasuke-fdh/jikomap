@@ -248,14 +248,15 @@
         map.on('style.load', () => {
             console.log('Style loaded. Initializing layers and controls.');
 
+            // ナビゲーションコントロール
+            map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
             // スケール表示
             map.addControl(new mapboxgl.ScaleControl({
                 maxWidth: 200,
                 unit: 'metric'
             }), 'top-right');
 
-            // ナビゲーションコントロール
-            map.addControl(new mapboxgl.NavigationControl());
 
             // GeoJSONファイルのリスト
             const geojsonFiles = [
